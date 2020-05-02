@@ -1,2 +1,2 @@
-# pe-geocoder
-Geocode Google Maps addresses to lat / long coordinates
+# Maps Geocoder
+Type or paste Google Maps addresses and get lat/long coordinates semicolon-separated.
