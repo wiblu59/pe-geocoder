@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Geocoder</title>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name=viewport content="width=device-width, initial-scale=1"/>
+  <link rel="icon" href="favicon.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: Roboto, sans-serif;
+      font-size: 1.42rem;
+    }
+    input, p { font-family: Roboto, sans-serif; font-size: 1rem; }
+    .form-input input:first-child {
+      z-index: 1;
+      width: 100%;
+      font-size: 16px;
+      border: 0;
+      border-bottom: 1px solid grey;
+      transition: border-color 200ms ease-in-out;
+      outline: none;
+      padding: 1%;
+      margin: 0;
+      border-bottom: 2px solid #4285F4;
+    }
+    #insert {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    #address { width: 50%; margin-bottom: 2.5%;}
+    #submit { width: 20%; padding: 1%; border: 0; background-color: #4285F4; border-radius: 3px; color: white;   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);}
+    #result { font-size: 1rem;}
+  </style>
+</head>
+<body>
+  <div id="insert" class="form-input">
+    <input id="address" type="textbox" value="" placeholder="Saisir les adresses séparées par des points-virgules">
+    <input id="submit" type="button" value="Geocode">
+  </div>
+  <p id="result"></p>
+  <script>
+    function initMap() {
+      var geocoder = new google.maps.Geocoder();
+      document.getElementById('submit').addEventListener('click', function() {
+        address_to_coordinates(geocoder, function(location){
+          document.getElementById("result").innerHTML = location;
+        });
+      });
+    }
+
+    function address_to_coordinates(geocoder, callback) {
+      var addresses = document.getElementById('address').value;
+      addresses = addresses.split(';');
+      for(let i = 0; i < addresses.length; i++) {
+        geocoder.geocode( {'address': addresses[i]}, function(results, status) {
+          if (status == google.maps.GeocoderStatus.OK) {
+            callback(results[0].geometry.location.lat() + ", " + results[0].geometry.location.lng() + ";");
+          } else {
+            callback(status + ";");
+          }
+        });
+      }
+    }
+  </script>
+  <script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAGDiKGVJPND8Ari9ekU1s_uPOZmxqnnIk&callback=initMap">
+</script>
+</body>
+</html>
