@@ -8,74 +8,117 @@
   <link rel="icon" href="favicon.png"/>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <style>
-    html, body {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100%;
-      width: 100%;
-      margin: 0;
-      padding: 0;
-      font-family: Roboto, sans-serif;
-      font-size: 1.42rem;
-    }
-    input, p { font-family: Roboto, sans-serif; font-size: 1rem; }
-    .form-input input:first-child {
-      z-index: 1;
-      width: 100%;
-      font-size: 16px;
-      border: 0;
-      border-bottom: 1px solid grey;
-      transition: border-color 200ms ease-in-out;
-      outline: none;
-      padding: 1%;
-      margin: 0;
-      border-bottom: 2px solid #4285F4;
-    }
-    #insert {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-    }
-    #address { width: 50%; margin-bottom: 2.5%;}
-    #submit { width: 20%; padding: 1%; border: 0; background-color: #4285F4; border-radius: 3px; color: white;   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);}
-    #result { font-size: 1rem;}
+  html, body, section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: Roboto, sans-serif;
+    font-size: 1.42rem;
+  }
+  footer {
+    display: flex;
+    flex-direction: column;
+    font-family: Roboto, sans-serif;
+    padding-bottom: 1.5%;
+  }
+  footer p {
+    text-align: center;
+    margin: 0; padding: 0;
+    font-size: .75rem;
+  }
+  input, p { font-family: Roboto, sans-serif; font-size: 1rem; }
+  .form-input input:first-child {
+    z-index: 1;
+    width: 100%;
+    font-size: 16px;
+    border: 0;
+    border-bottom: 1px solid grey;
+    transition: border-color 200ms ease-in-out;
+    outline: none;
+    padding: 1%;
+    margin: 0;
+    border-bottom: 2px solid #4285F4;
+  }
+  #insert {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  #address { width: 50%; margin-bottom: 2.5%;}
+  #submit { width: 20%; padding: 1%; border: 0; background-color: #4285F4; border-radius: 3px; color: white; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); cursor: pointer;}
+  #download { width: 10%; padding: 1%; border: 0; background-color: #4285F4; border-radius: 3px; color: white; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); cursor: pointer;}
+  #result { font-size: 1rem;}
   </style>
 </head>
 <body>
-  <div id="insert" class="form-input">
-    <input id="address" type="textbox" value="" placeholder="Saisir les adresses séparées par des points-virgules">
-    <input id="submit" type="button" value="Geocode">
-  </div>
-  <p id="result"></p>
+  <section>
+    <div id="insert" class="form-input">
+      <input id="address" type="textbox" value="" placeholder="Saisir les adresses séparées par des points-virgules">
+      <input id="submit" type="button" value="Geocode">
+    </div>
+    <p><span id="result">0</span> / <span id="total">0</span> résultats récupérés</p>
+    <input id="download" type="button" value="Télécharger">
+  </section>
   <script>
-    function initMap() {
-      var geocoder = new google.maps.Geocoder();
-      document.getElementById('submit').addEventListener('click', function() {
-        address_to_coordinates(geocoder, function(location){
-          document.getElementById("result").innerHTML = location;
-        });
+  var emplacements = [];
+
+  function sleep(ms) {
+    return new Promise(
+      resolve => setTimeout(resolve, ms));
+  }
+
+  function initMap() {
+    var geocoder = new google.maps.Geocoder();
+    document.getElementById('submit').addEventListener('click', function() {
+      emplacements = ["Adresse fournie;Coordonnées obtenues"];
+      address_to_coordinates(geocoder, function(location){
+        emplacements.push(location);
+        document.getElementById("result").innerHTML = emplacements.length - 1;
+      });
+    });
+    document.getElementById('download').addEventListener('click', function() {
+      csvContent = "data:text/csv;charset=utf-8,";
+      emplacements.forEach(function(rowArray) {
+        csvContent += rowArray + "\r\n";
+      });
+      var encodedUri = encodeURI(csvContent);
+      var link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "geocoder_export.csv");
+      document.body.appendChild(link);
+      link.click();
+    });
+  }
+
+  async function address_to_coordinates(geocoder, callback) {
+    var addresses = document.getElementById('address').value;
+    addresses = addresses.split(';');
+    document.getElementById("total").innerHTML = addresses.length;
+    for(let i = 0; i < addresses.length; i++) {
+      await sleep(1001);
+      geocoder.geocode( {'address': addresses[i]}, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+          callback(addresses[i] +";" + results[0].geometry.location.lat() + ", " + results[0].geometry.location.lng());
+        } else {
+          callback(addresses[i] + ";" + status);
+        }
       });
     }
-
-    function address_to_coordinates(geocoder, callback) {
-      var addresses = document.getElementById('address').value;
-      addresses = addresses.split(';');
-      for(let i = 0; i < addresses.length; i++) {
-        geocoder.geocode( {'address': addresses[i]}, function(results, status) {
-          if (status == google.maps.GeocoderStatus.OK) {
-            callback(results[0].geometry.location.lat() + ", " + results[0].geometry.location.lng() + ";");
-          } else {
-            callback(status + ";");
-          }
-        });
-      }
-    }
+  }
   </script>
   <script async defer
   src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
 </script>
+<footer>
+  <p>Outil à accès restreint créé par <a href="https://fiblu.williamblu.me/">William</a> avec <a href="https://developers.google.com/maps/documentation/geocoding/start">l'API Geocoding de Google Maps Platform</a></p>
+  <p>Si vous avez besoin d'utiliser l'outil, merci de le demander dans <a href="https://support.google.com/maps/thread/new?hl=fr">un nouveau sujet de la communauté Google Maps</a></p>
+  <p>Toutes les opérations sont effectuées sur votre ordinateur et il m'est impossible de connaître les recherches effectuées. Aucune donnée n'est sauvegardée.</p>
+</footer>
 </body>
 </html>
