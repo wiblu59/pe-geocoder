@@ -1,4 +1,5 @@
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/blup/public_html/
-    - /bin/cp -R * $DEPLOYPATH
+    - export DEPLOYPATH=/home/blup/geocoder.williamblu.me/
+    - /bin/cp index.html $DEPLOYPATH
+    - /bin/cp favicon.png $DEPLOYPATH
